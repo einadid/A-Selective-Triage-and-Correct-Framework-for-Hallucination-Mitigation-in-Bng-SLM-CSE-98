@@ -11,12 +11,20 @@
   - Accelerator: GPU T4 x2
   - Internet: ON (important, model download er jonno)
 
-## Step 3: Code Copy-Paste Koro
+## Step 3: Code Copy-Paste Koro - IMPORTANT! Branch Clone
 Nicher full code ta first cell e paste koro, Shift+Enter chap:
 
+**Merge na korleo data pabe, kintu branch specify korte hobe!**
+
 ```python
-# SETU - Real Model Run on Kaggle
+# SETU - Real Model Run on Kaggle - WITH BRANCH (merge chara)
 !pip install -q transformers accelerate bitsandbytes sentence-transformers faiss-cpu scikit-learn
+
+# IMPORTANT: -b flag diye amader arena branch clone korte hobe, main e code nai
+!git clone -b arena/01a0c59d-a-selective-triage-and-correct https://github.com/einadid/A-Selective-Triage-and-Correct-Framework-for-Hallucination-Mitigation-in-Bng-SLM-CSE-98.git
+%cd A-Selective-Triage-and-Correct-Framework-for-Hallucination-Mitigation-in-Bng-SLM-CSE-98
+!ls -lh src/
+# Dekhbe src/ folder e 12 ta file ache - mane branch thik clone hoyeche
 
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
