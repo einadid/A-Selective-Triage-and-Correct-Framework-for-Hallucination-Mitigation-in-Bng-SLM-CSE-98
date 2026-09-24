@@ -1,0 +1,355 @@
+BSc Thesis Proposal
+SETU: A Selective Triage-and-Correct Framework for 
+Hallucination Mitigation in Bengali Small Language 
+Models
+Uncertainty-Calibrated, Type-Aware Correction across Native Bengali and Bangla–English Code-
+Mixed Question Answering, Summarization, and Reasoning
+Department of Computer Science & Engineering
+Port City International University, Dhaka
+Academic Year 2025–2026
+SETU (সেতু, “bridge”) = Selective Evidence-grounded Triage with Uncertainty-aware correction
+
+0. Reference Verification Note (read first)
+The proposal is built only on papers whose venue, authors, and claims were verified. An earlier topic-
+suggestion PDF that circulated in the group contained unreliable citations (placeholder arXiv IDs such as 
+“2403.xxxxx” and mismatched author/venue attributions). None of those unverified entries are used here. 
+Every base and supporting paper below was cross-checked against the uploaded PDFs or the original 
+venue page (arXiv, ACL Anthology, IEEE Xplore, OpenReview) in July 2026.
+1. Introduction and Motivation
+Large Language Models (LLMs) and their smaller variants (SLMs, roughly 1–3B parameters) frequently 
+produce fluent but factually wrong or ungrounded text — a failure called hallucination. A medical query 
+bot that invents a drug dose, a summarizer that adds facts absent from the source, or a math tutor that 
+silently corrupts one arithmetic step can all cause real harm. Two large 2026 studies frame the problem for 
+our setting precisely: (i) smaller models hallucinate significantly more than larger ones, and (ii) 
+hallucination is worse and harder to measure in low-resource, non-English languages, where uncertainty 
+signals are often mis-calibrated.
+Bengali is the sixth most spoken language in the world, yet until mid-2026 no framework even measured 
+hallucination in Bengali LLMs. BenHalluEval (2026) closed that measurement gap for four tasks 
+(Generative QA, Bangla–English code-mixed QA, summarization, reasoning) and showed two 
+uncomfortable facts: hallucination calibration varies wildly across models, and chain-of-thought 
+prompting — the usual cheap fix — helped in only 9 of 21 model–task combinations and hurt in 12.
+The open problem this thesis attacks: Bengali has an evaluation benchmark but no mitigation framework. 
+BenHalluEval explicitly lists “consistency-based mitigation strategies” as future work. The only Bengali 
+self-correction work (BanglaForge, 2025) is restricted to code generation, and notes that Bengali 
+generation systems still lack built-in grounding, correction, or iteration mechanisms. Reducing — not just 
+detecting — hallucination in Bengali SLMs is unexplored territory.
+2. Why This Is Method-Level Novelty (not a dataset swap)
+A common weak thesis pattern is: take an existing English method, run it on a Bengali dataset, report a 
+higher accuracy. That is replication, not contribution. SETU is different in mechanism, and the contribution 
+survives even if datasets change:
+• A type-aware triage router. Every existing mitigation method applies a single uniform fix — either 
+retrieval, or self-verification. SETU first classifies each hallucination-prone claim as data-driven 
+(missing knowledge) or reasoning-driven (logical error), then routes it to the correct repair. No 
+prior Bengali or SLM system does this routing.
+• A first calibration study of uncertainty signals for Bengali SLMs. Multilingual studies report that 
+uncertainty is mis-calibrated in low-resource languages, but no one has measured which signal 
+(semantic entropy, self-consistency, verbalized confidence) is actually reliable in Bengali. This is a 
+dataset-independent scientific finding.
+
+• Mitigation, not detection. The entire Bengali hallucination literature to date is 
+detection/evaluation only. SETU produces corrected or abstained answers and is scored on how 
+much it lowers hallucination.
+• Abstention as a first-class output. When neither repair resolves a flagged claim, SETU makes the 
+model say “
+ 
+ ” 
+আমিনিশ্চিতনা(I am not sure) instead of committing a confident error — aligned with the 
+2026 shift from chasing zero hallucination to managing uncertainty.
+• Code-mixed mitigation. Bangla–English code-mixed text is heavily used online and is a distinct task 
+in BenHalluEval, but mitigation on code-mixed input is completely unexamined.
+Proof of contribution: an ablation study turns each SETU component off in isolation, so the improvement 
+is demonstrably in the mechanism, not in data selection.
+3. Research Questions
+1. RQ1. Which uncertainty signals are calibrated enough to flag hallucination-prone claims in Bengali 
+SLMs, and does calibration differ between native Bengali and code-mixed input?
+2. RQ2. Can hallucinations be reliably triaged as data-driven vs reasoning-driven in a black-box SLM 
+setting without model-internal access?
+3. RQ3. Does type-aware routing (retrieval for data-driven, belief-consistency for reasoning-driven) 
+reduce hallucination more than a single uniform fix, measured by dual-track BenHalluScore?
+4. RQ4. Does uncertainty-grounded abstention improve overall reliability without excessively 
+refusing answerable questions?
+
+4. Base Papers (verified, 2024–2026)
+SETU stands on six primary papers. Each contributes one reusable component; SETU’s novelty is the 
+combination and the routing between them.
+4.1 BenHalluEval — arXiv 2605.31483 (updated Jun 2026) [evaluation protocol]
+• What it gives us: the dual-track evaluation protocol (Track A on ground-truth answers to catch 
+false alarms; Track B on hallucinated candidates to catch misses) and the BenHalluScore metric = 
+½×(Track A error + Track B error). Also the four Bengali tasks and 12,000 hallucinated candidates.
+• Gap we exploit: detection/evaluation only; CoT mitigation is unreliable (9/21 improve, 12/21 
+degrade); mitigation is left as future work.
+4.2 HalluGuard — ICLR 2026 [triage inspiration]
+• What it gives us: the formal decomposition of hallucination into a data-driven term 
+(flawed/missing knowledge) and a reasoning-driven term (inference-time instability). SETU 
+borrows this taxonomy as the basis of its triage router.
+• Gap we exploit: HalluGuard is a detection score requiring NTK/internal access on English 
+benchmarks; SETU makes the data-vs-reasoning decision black-box and lightweight, then acts on it 
+to correct output.
+4.3 BTPROP (Belief Tree Propagation) — NAACL 2025 [reasoning-driven fix]
+• What it gives us: a consistency-based verification idea — expand a claim into logically related 
+statements and use NLI + confidence consistency to judge truthfulness. SETU uses a lightweight 
+version as the reasoning-driven repair.
+• Gap we exploit: English-only, and its full belief tree is compute-heavy; SETU applies a shallow, 
+SLM-friendly consistency check triggered only for reasoning-flagged claims.
+4.4 HalluSearch — SemEval-2025 Task 3 (Mu-SHROOM) [data-driven fix]
+• What it gives us: atomic factual-claim splitting + retrieval-augmented verification, with fallback 
+strategies when search coverage is thin. SETU adopts claim splitting and retrieval verification for 
+data-driven claims.
+• Gap we exploit: it reports degraded performance in low-online-coverage languages; SETU adds a 
+cross-lingual (Bengali→English) retrieval fallback to compensate for the sparse Bengali corpus.
+4.5 “How Much Do LLMs Hallucinate across Languages?” (MFAVA) — arXiv 2502.12769 (updated Feb 
+2026) [motivation]
+• What it gives us: empirical grounding — smaller models hallucinate more; broader-language 
+models hallucinate more; hallucination rate does not simply track a language’s data size; and 
+hallucination-rate estimation must correct for detector precision/recall. Justifies focusing on SLMs 
+and on careful metric design.
+
+4.6 Cost-Efficient Cross-Lingual RAG for Bengali — arXiv 2601.02065 (Jan 2026) [cross-lingual 
+grounding]
+• What it gives us: evidence that translating Bengali queries to English, retrieving from a high-
+resource corpus, and returning in Bengali improves low-resource grounding. SETU turns this static 
+pipeline into an adaptive fallback used only when the Bengali corpus is insufficient.
+
+5. Positioning: How SETU Differs from Every Base Paper
+Work
+Bengali
+Mitigation 
+(not just 
+detection)
+Type-aware 
+triage (data 
+vs reasoning)
+Uncertainty 
+calibration 
+study
+Code-mixed
+Abstention
+BenHalluEval (2026)
+Yes
+No
+No
+No
+Yes (eval)
+No
+HalluGuard (ICLR 
+2026)
+No
+No
+Yes 
+(detection)
+No
+No
+No
+BTPROP (NAACL 
+2025)
+No
+No
+No
+Partial
+No
+No
+HalluSearch 
+(SemEval 2025)
+No
+Detection
+No
+No
+No
+No
+Cross-Lingual Bengali 
+RAG (2026)
+Yes
+Yes
+No
+No
+No
+No
+SETU (this thesis)
+Yes
+Yes
+Yes
+Yes
+Yes
+Yes
+Table 1: SETU is the only framework that combines Bengali + mitigation + type-aware triage + uncertainty calibration + code-mixed 
+coverage + abstention.
+One-sentence claim for the defense: “To the best of our knowledge, SETU is the first framework to reduce 
+(not merely detect) hallucination in Bengali small language models, using a novel uncertainty-triggered 
+triage that routes each flagged claim to type-specific correction — cross-lingual retrieval for knowledge 
+gaps, belief-consistency for reasoning errors — and abstains when unresolved, evaluated with dual-track 
+BenHalluScore across native and code-mixed Bengali.”
+6. Complete Reading List (team split)
+Suggested split for a three-member team: each member owns one group plus shares the two Bengali base 
+papers.
+Group A — Base papers (read fully)
+1. BenHalluEval: A Multi-Task Hallucination Evaluation Framework for LLMs on Bengali (arXiv 
+2605.31483, 2026).
+2. HalluGuard: Demystifying Data-Driven and Reasoning-Driven Hallucinations in LLMs (ICLR 2026).
+3. A Probabilistic Framework for LLM Hallucination Detection via Belief Tree Propagation — BTPROP 
+(NAACL 2025).
+4. HalluSearch: A Search-Enhanced RAG Pipeline for Hallucination Detection (SemEval-2025 Task 3).
+5. How Much Do LLMs Hallucinate across Languages? — MFAVA (arXiv 2502.12769, 2026).
+6. Cost-Efficient Cross-Lingual RAG for Low-Resource Languages: A Bengali Case Study (arXiv 
+2601.02065, 2026).
+Group B — Methods & signals (read methods sections)
+1. MALTO at SemEval-2024 Task 6 (SHROOM): synthetic-data + NLI ensemble for hallucination 
+detection.
+
+2. SelfCheckGPT: Zero-Resource Black-Box Hallucination Detection (Manakul et al., EMNLP 2023) — 
+self-consistency signal.
+3. Detecting Hallucinations in LLMs Using Semantic Entropy (Farquhar et al., Nature 2024) — 
+uncertainty signal.
+4. Chain-of-Verification Reduces Hallucination (Dhuliawala et al., ACL 2024) — verify-then-revise 
+baseline.
+Group C — Bengali & multilingual context (read + cite in Ch.2)
+1. Generation, Analysis, and Detection of LLM-Manipulated Bangla News (Akther et al., IEEE Access, 
+Dec 2025) — knowledge-based detection (NER + retrieval + consistency).
+2. Social Bias in LLMs for Bangla (Sadhu et al., LoResLM 2025) — first Bangla LLM social-behaviour 
+study; motivates reliability work.
+3. MultiHaluDet: Multilingual Hallucination Detection via LLM Hidden-State Probing (MeLLM 2026).
+4. BanglaMedQA / BanglaMMedBench: RAG strategies for Bangla biomedical QA (arXiv 2511.04560, 
+2025).
+5. BanglaBERT (Bhattacharjee et al., NAACL 2022) and TyDiQA-GoldP (Clark et al., 2020) — model and 
+data references.
+
+7. Methodology — The SETU Pipeline
+7.1 High-level flow
+Bengali (or code-mixed) query → SLM draft answer → (1) atomic claim decomposition → (2) per-claim 
+uncertainty scoring → flag high-uncertainty claims → (3) triage each flagged claim as data-driven or 
+reasoning-driven → (4) targeted correction: cross-lingual retrieval for data-driven, belief-consistency 
+check for reasoning-driven → (5) if unresolved, abstain on that claim → reassemble a corrected, grounded 
+answer.
+7.2 Stage-by-stage
+1. Draft generation. A Bengali-capable SLM (candidates: Qwen2.5-1.5B/3B-Instruct, Gemma-2-2B, 
+and a Bangla-centric model in the TigerLLM line) produces an initial answer at 4-bit precision.
+2. Atomic claim decomposition (Bengali-adapted). Split the answer into single-fact claims (following 
+the HalluSearch / FActScore idea), so each claim can be verified independently. Prompt templates 
+are authored and validated by native Bengali speakers on the team.
+3. Per-claim uncertainty scoring (RQ1). Compute three signals per claim — semantic entropy 
+(multiple samples clustered by NLI), self-consistency (agreement across samples), and verbalized 
+confidence — and measure their calibration (Expected Calibration Error, AUROC vs gold) 
+separately for native and code-mixed input. This calibration study is a standalone contribution.
+4. Triage / routing (RQ2). A lightweight classifier labels each flagged claim data-driven (answer needs 
+external facts — entity/date/quantity) or reasoning-driven (a logical/arithmetic step is wrong). 
+Signals: retrieval-answerability probe, claim type (factual vs inferential), and self-contradiction 
+under paraphrase. Grounded in HalluGuard’s decomposition but done black-box.
+5. Data-driven correction. Retrieve from a Bengali Wikipedia FAISS index (embeddings: BGE-M3 / 
+multilingual-e5, plus BM25). If Bengali retrieval score is below threshold, fall back to cross-lingual 
+retrieval: translate the claim to English, retrieve from English Wikipedia, return grounding in 
+Bengali (adaptive version of the 2026 Bengali cross-lingual RAG pipeline). Revise the claim to 
+match retrieved evidence.
+6. Reasoning-driven correction. Run a shallow belief-consistency check (lightweight BTPROP): 
+generate a few logically related sub-claims, use an NLI model to test entailment/contradiction, and 
+revise the claim if it is inconsistent with its own supported premises.
+7. Abstention (RQ4). If a flagged claim remains unresolved after correction, replace it with an explicit 
+“
+ 
+ ” 
+আমিনিশ্চিতনাmarker rather than emitting a confident guess.
+8. Reassembly. Recombine verified, corrected, and abstained claims into the final Bengali answer.
+7.3 Datasets (all public, from the base papers)
+Task
+Dataset
+Role
+Generative QA
+TyDiQA-GoldP (Bengali)
+Question–passage–answer triples; primary QA evaluation.
+Code-Mixed QA
+Code-mixed TyDiQA 
+(BenHalluEval style)
+Bangla–English Roman-script questions; unique mitigation setting.
+Summarization
+BanglaCHQ-Summ
+Medical query–summary pairs; faithfulness evaluation.
+
+Task
+Dataset
+Role
+Reasoning
+SOMADHAN
+Bengali math word problems with chain-of-thought.
+Detection val.
+BenHalluEval 12K 
+candidates
+If released: validate uncertainty/triage components.
+Retrieval corpus
+Bengali + English 
+Wikipedia dumps
+Chunked to passages, FAISS-indexed for grounding.
+7.4 Baselines and evaluation
+• Baselines: (a) raw SLM, no mitigation; (b) chain-of-thought prompting (BenHalluEval’s tested fix); 
+(c) uniform RAG (retrieve-then-answer, no triage); (d) uniform self-verification (chain-of-
+verification). SETU must beat all four.
+• Primary metric: dual-track BenHalluScore (lower is better) on each of the four tasks — penalizes 
+both false alarms and missed hallucinations.
+• Secondary metrics: task accuracy / F1, abstention rate and over-abstention rate, retrieval 
+recall@k, and calibration (ECE / AUROC) for RQ1.
+• Statistics: multiple seeds with paired significance tests between SETU and each baseline — the 
+same rigorous protocol the team used in its federated-learning thesis.
+7.5 Ablations (this is what proves method-level novelty)
+• Remove claim decomposition (verify whole answer at once).
+• Remove triage (apply one uniform fix to every flagged claim).
+• Remove cross-lingual fallback (Bengali retrieval only).
+• Remove belief-consistency (retrieval for everything).
+• Remove abstention (always answer).
+Each removed component should measurably raise BenHalluScore, demonstrating the gain lives in the 
+routing mechanism — not in dataset choice.
+7.6 Compute feasibility (Kaggle)
+• All inference, no pre-training. 1.5–3B SLMs run at 4-bit on a Kaggle P100/T4; LoRA is available if 
+any light fine-tuning of the triage classifier is needed.
+• Uncertainty cost is bounded: semantic entropy needs ~5–10 samples per flagged claim plus a 
+small NLI model — tractable because it runs only on flagged claims, not every token.
+• Retrieval: BGE-M3 / multilingual-e5 embeddings + FAISS over a chunked Wikipedia subset; no API 
+cost.
+
+8. Timeline (approx. 6 months)
+Month
+Milestone
+1
+Read Group A + B; finalize proposal; supervisor sign-off; download datasets and Wikipedia; build FAISS 
+index; set up SLM inference on Kaggle.
+2
+Claim decomposition + uncertainty scoring; run the calibration study (RQ1) on native and code-mixed 
+input.
+3
+Build the triage router (RQ2); implement data-driven retrieval fix with cross-lingual fallback.
+4
+Implement reasoning-driven belief-consistency fix + abstention; integrate full SETU pipeline; first end-to-
+end BenHalluScore run.
+5
+Baselines, ablations (RQ3), statistical tests, error analysis, over-abstention study (RQ4); freeze results.
+6
+Thesis writing (Chapters 1–5), presentation, defense; optional BLP / LoResLM workshop submission.
+9. Risks and Mitigations
+• Uncertainty signals may be poorly calibrated in Bengali. This is not a failure — it is RQ1’s finding 
+and a publishable result. If all signals are weak, use retrieval-answerability as the primary flag.
+• Sparse Bengali retrieval corpus. The cross-lingual English fallback is designed exactly for this; 
+report how often it triggers.
+• Triage misclassification. Report triage accuracy separately; a claim wrongly routed still gets a fix, 
+so errors degrade gracefully rather than catastrophically.
+• Compute pressure from multi-sample uncertainty. Sampling runs only on flagged claims; cap 
+samples at 5–10 and cache NLI results.
+• Citation reliability. Every reference is pulled from its original venue page; the discredited topic PDF 
+is not used.
+10. Expected Contributions
+1. The first hallucination-mitigation framework for Bengali small language models (native + code-
+mixed).
+2. A novel uncertainty-triggered, type-aware triage that routes data-driven vs reasoning-driven 
+hallucinations to different repairs.
+3. The first calibration study of uncertainty signals for Bengali SLMs — a dataset-independent 
+scientific finding.
+4. An adaptive cross-lingual retrieval fallback tuned for the sparse Bengali corpus.
+5. Uncertainty-grounded abstention for Bengali generation, with an over-abstention analysis.
+6. A reproducible mitigation evaluation under dual-track BenHalluScore across four tasks, with full 
+ablations.
+
+11. Immediate Next Steps
+1. Download and read BenHalluEval and HalluGuard in full; confirm the BenHalluScore formula and 
+dual-track setup.
+2. Verify all references on Google Scholar / venue pages and build the BibTeX file.
+3. Present Table 1 (positioning) and Section 2 (novelty) plus the SETU pipeline to the supervisor for 
+approval.
+4. Acquire datasets (TyDiQA-GoldP Bengali, BanglaCHQ-Summ, SOMADHAN) and build the Wikipedia 
+FAISS index.
+5. Stand up the Kaggle SLM inference notebook and run the Month-2 uncertainty calibration study 
+first — it de-risks the whole project early.
