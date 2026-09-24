@@ -1,110 +1,90 @@
-# Kaggle e SETU Run Korar Guide - Step by Step
+# Kaggle e SETU Run - Final Guide (2 ta path, jeta tomake Shohoj)
 
-> **UPDATE: Repo ekhon PUBLIC + main branch e full code ache.**
-> Tai token lagbe na, `-b` flag lagbe na - simple clone command e shob kaj korbe.
+**Notebook:** `notebooks/SETU_Kaggle_Full.ipynb` — ei ta import koro Kaggle e, tarpor shob cell run.
+**Cell 1 nijei repo setup kore** - git clone chesta kore, fail korle `/kaggle/input` er zip theke ney.
+Mane duto path e same notebook e kaj korbe.
 
-## Step 1: Kaggle Account
-- kaggle.com e jao, Google diye login koro
-- Phone verify koro (free GPU er jonno lage)
+---
 
-## Step 2: New Notebook Banao
-- Kaggle -> Create -> New Notebook
-- Title dao: SETU_Bengali_Hallucination
-- Right side e:
-  - Accelerator: GPU T4 x2
-  - Internet: ON (important - model download + GitHub clone er jonno)
+## Kaggle Settings (Age Ei Kaj Ta Koro - Must)
 
-## Step 3: Code Copy-Paste Koro
-Nicher full code ta first cell e paste koro, Shift+Enter chap:
+Kaggle notebook er **right side panel** e:
+- **Accelerator** -> `GPU T4 x2`
+- **Internet** -> `ON`   *(off thakle `Could not resolve host: github.com` error asbe)*
 
-```python
-# SETU - Real Model Run on Kaggle
-!pip install -q transformers accelerate bitsandbytes sentence-transformers faiss-cpu scikit-learn
+---
 
-# Repo public - token lagbe na, simple clone
-!git clone https://github.com/einadid/A-Selective-Triage-and-Correct-Framework-for-Hallucination-Mitigation-in-Bng-SLM-CSE-98.git
-%cd A-Selective-Triage-and-Correct-Framework-for-Hallucination-Mitigation-in-Bng-SLM-CSE-98
-!ls -lh src/
-# src/ folder e 12+ ta file dekha uchit (triage_router.py, setu_pipeline.py etc.)
+## Path A: Repo Public koro (best - ekbar kore felo)
 
-import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
+1. GitHub repo page -> **Settings** (repo er settings, profile na)
+2. Nicher dike scroll -> **Danger Zone** -> **Change repository visibility** -> **Change to public**
+3. Confirm likhe dao repo er naam
+4. Ekhon Kaggle e notebook Cell 1 run korlei hobe — token, zip kichui lagbe na
 
-print("GPU:", torch.cuda.is_available())
-print("GPU Name:", torch.cuda.get_device_name(0) if torch.cuda.is_available() else "No GPU")
+> Thesis er jonno public kora valo: supervisor dekhbe, examiner dekhbe, portfolio hobe,
+> ar dissertation e link dewa jabe. Code er moddhe kono secret/token nai (ami scan korechi).
 
-# Load Qwen2.5-1.5B 4-bit
-model_name = "Qwen/Qwen2.5-1.5B-Instruct"
-print(f"Loading {model_name}...")
+---
 
-tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
+## Path B: Private rekhe Zip method (ekhon i kaj korbe, kono permission lagbe na)
 
-bnb_config = BitsAndBytesConfig(
-    load_in_4bit=True,
-    bnb_4bit_quant_type="nf4",
-    bnb_4bit_compute_dtype=torch.float16,
-    bnb_4bit_use_double_quant=True
-)
+1. GitHub repo -> **Code** (green button) -> **Download ZIP**
+   - File name: `A-Selective-Triage-and-Correct-Framework-for-Hallucination-Mitigation-in-Bng-SLM-CSE-98-main.zip`
+   - (Ami ekhane ekta ready zip o diyechi: `setu-code-for-kaggle.zip`)
+2. Kaggle notebook -> right panel -> **Add Input** -> **Upload Dataset** -> zip ta upload koro
+3. Notebook er **Cell 1** run koro — code ta zip ta khuje ber kore nijei extract kore nebe
 
-model = AutoModelForCausalLM.from_pretrained(
-    model_name,
-    quantization_config=bnb_config,
-    device_map="auto",
-    trust_remote_code=True
-)
+GitHub link e jete na chaile: ami `setu-code-for-kaggle.zip` ta diye diyechi — sudhu download kore upload koro.
 
-print("Model loaded!")
+---
 
-# Test Bengali
-prompt = "বাংলাদেশের রাজধানী কোথায়?"
-inputs = tokenizer(f"User: {prompt}\nAssistant:", return_tensors="pt").to(model.device)
-with torch.no_grad():
-    outputs = model.generate(**inputs, max_new_tokens=100, temperature=0.7, do_sample=True)
-    ans = tokenizer.decode(outputs[0][inputs.input_ids.shape[1]:], skip_special_tokens=True)
-    print(f"\nQ: {prompt}\nA: {ans}")
+## Run Order (shob cell shift+enter)
 
-# Test hallucination case
-prompt2 = "ঢাকার জনসংখ্যা কত? (2022 census অনুযায়ী)"
-inputs2 = tokenizer(f"User: {prompt2}\nAssistant:", return_tensors="pt").to(model.device)
-with torch.no_grad():
-    outputs2 = model.generate(**inputs2, max_new_tokens=150, temperature=0.7, do_sample=True)
-    ans2 = tokenizer.decode(outputs2[0][inputs2.input_ids.shape[1]:], skip_special_tokens=True)
-    print(f"\nQ: {prompt2}\nA: {ans2}")
-```
+| Cell | Ki kore | Time |
+|---|---|---|
+| 1 | pip install + repo setup (clone/zip auto) | 1-2 min |
+| 2 | 13 ta SETU module import + GPU check | 30 sec |
+| 3 | Qwen2.5-1.5B 4-bit load + 3 ta test question (control / numeric / code-mixed) | 4-6 min (first time) |
+| 4 | BGE-M3 retriever + demo corpus + FAISS index + cross-lingual test | 3-5 min |
+| 5 | Draft -> claim decomposition -> uncertainty (RQ1) -> triage | 2-4 min |
+| 6 | **Full SETU pipeline end-to-end** (draft -> claims -> triage -> correction -> abstention -> reassembly) | 2-4 min |
+| 7 | Supervisor report auto-generate (`/kaggle/working/SUPERVISOR_REPORT_week1.md`) | 5 sec |
 
-## Step 4: Run
-- Run button chap, 5-6 min wait koro (first time model download ~3GB)
-- Output e dekhbe Bengali answer
-- Success hole `src/` folder er file list + GPU name + 2 ta Bengali answer dekhabe
+**Total ~15-20 min** — T4 x2 free tier te fit kore.
 
-## Step 5: Full SETU Pipeline (Next Cell)
-Clone already hoye geche Step 3 e, tai abar clone korte hobe na - sudhu requirements install + run:
+---
 
-```python
-%cd /kaggle/working/A-Selective-Triage-and-Correct-Framework-for-Hallucination-Mitigation-in-Bng-SLM-CSE-98
-!pip install -q -r requirements.txt
+## Success Check (kivabe jaanbe shob thik)
 
-# Run real pipeline
-!python src/main.py --input "বাংলাদেশের রাজধানী কোথায় এবং এর জনসংখ্যা কত?"
-```
+- Cell 1: `Repo root : /kaggle/working/A-Selective-...` + `src/` list dekhay
+- Cell 2: `All SETU modules imported OK` + GPU name + VRAM
+- Cell 3: Bengali answer gulo ber hoy (kono blank na)
+- Cell 5: `TRIAGE -> data-driven` / `reasoning-driven` label + uncertainty number
+- Cell 6: `FINAL ANSWER` er por `STATS` JSON (n_claims, n_flagged, n_data_driven, n_abstained)
+- Cell 7: report file — **Output** tab theke download koro
 
-## Full Notebook
-Ready-made 6-cell notebook o ache repo te: `notebooks/SETU_Kaggle_Full.ipynb`
-Kaggle e: File -> Import Notebook -> ei file ta upload koro -> shob cell run koro.
+**Screenshot lagbe 3 ta:** Cell 2 (GPU + modules), Cell 5 (triage labels), Cell 6 (FINAL ANSWER + stats)।
+Ei 3 ta supervisor ke pathao.
 
-## Latest Code Update Pete
-Ami notun code push korle (main branch e), Kaggle e:
-```python
-%cd /kaggle/working/A-Selective-Triage-and-Correct-Framework-for-Hallucination-Mitigation-in-Bng-SLM-CSE-98
-!git pull origin main
-```
+---
 
 ## Troubleshooting
-- **CUDA out of memory** -> model_name change to `Qwen/Qwen2.5-0.5B-Instruct` (choto model)
-- **Internet off** -> `Could not resolve host: github.com` error ashe; Settings e Internet ON koro
-- **Authentication failed / could not read Username** -> repo private hoye geche; GitHub Settings theke abar public koro
-- **Session expire** -> Save kore rakho, abar run koro
 
-## Next
-- Result screenshot niye supervisor ke dekhao
-- Amake bolo result ki aslo
+| Problem | Fix |
+|---|---|
+| `Could not resolve host: github.com` | Internet **OFF** ache -> Settings e ON koro |
+| `Authentication failed` / `could not read Username` | repo private + Path B (zip) use koro, ba repo public koro |
+| `CUDA out of memory` | Cell 3 e model change: `Qwen/Qwen2.5-0.5B-Instruct` |
+| Cell 4 slow / stuck | BGE-M3 (~2GB) download hocche, wait koro |
+| Cell 5 time lagche | `cfg.uncertainty.n_samples = 3` ache; 1 o korte paro |
+| Session e GPU nei | Settings -> Accelerator -> GPU T4 x2 -> Save -> session restart |
+
+---
+
+## Er Pore Ki (Week 2)
+
+1. `BenHalluEval` 12K dataset load + unified schema (`src/data/loaders.py`)
+2. Real Bengali Wikipedia diye FAISS index build (`ret.build_index_from_wiki_dump`)
+3. RQ1 full experiment: semantic entropy vs self-consistency vs verbalized confidence + ECE/AUROC
+4. Baselines chalano: Raw SLM, CoT, Uniform RAG, Chain-of-Verification (`src/evaluation/baselines.py`)
+5. BenHalluScore diye comparison table (Table 1 - supervisor approval lagbe)

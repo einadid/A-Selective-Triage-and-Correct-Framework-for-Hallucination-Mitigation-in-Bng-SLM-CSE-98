@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.ipynb_checkpoints/
+
+# Env / secrets
+.env
+.venv/
+venv/
+*.token
+secrets.json
+
+# Data & models (boro file - git e dhukbe na)
+data/raw/
+data/index/
+data/processed/
+*.faiss
+*.index
+*.pkl
+*.bin
+*.safetensors
+*.ckpt
+
+# Kaggle / outputs
+outputs/
+runs/
+*.log
+/kaggle/
