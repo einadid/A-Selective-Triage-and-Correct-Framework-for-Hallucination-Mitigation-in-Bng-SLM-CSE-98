@@ -1,5 +1,8 @@
 # Kaggle e SETU Run Korar Guide - Step by Step
 
+> **UPDATE: Repo ekhon PUBLIC + main branch e full code ache.**
+> Tai token lagbe na, `-b` flag lagbe na - simple clone command e shob kaj korbe.
+
 ## Step 1: Kaggle Account
 - kaggle.com e jao, Google diye login koro
 - Phone verify koro (free GPU er jonno lage)
@@ -9,22 +12,20 @@
 - Title dao: SETU_Bengali_Hallucination
 - Right side e:
   - Accelerator: GPU T4 x2
-  - Internet: ON (important, model download er jonno)
+  - Internet: ON (important - model download + GitHub clone er jonno)
 
-## Step 3: Code Copy-Paste Koro - IMPORTANT! Branch Clone
+## Step 3: Code Copy-Paste Koro
 Nicher full code ta first cell e paste koro, Shift+Enter chap:
 
-**Merge na korleo data pabe, kintu branch specify korte hobe!**
-
 ```python
-# SETU - Real Model Run on Kaggle - WITH BRANCH (merge chara)
+# SETU - Real Model Run on Kaggle
 !pip install -q transformers accelerate bitsandbytes sentence-transformers faiss-cpu scikit-learn
 
-# IMPORTANT: -b flag diye amader arena branch clone korte hobe, main e code nai
-!git clone -b arena/01a0c59d-a-selective-triage-and-correct https://github.com/einadid/A-Selective-Triage-and-Correct-Framework-for-Hallucination-Mitigation-in-Bng-SLM-CSE-98.git
+# Repo public - token lagbe na, simple clone
+!git clone https://github.com/einadid/A-Selective-Triage-and-Correct-Framework-for-Hallucination-Mitigation-in-Bng-SLM-CSE-98.git
 %cd A-Selective-Triage-and-Correct-Framework-for-Hallucination-Mitigation-in-Bng-SLM-CSE-98
 !ls -lh src/
-# Dekhbe src/ folder e 12 ta file ache - mane branch thik clone hoyeche
+# src/ folder e 12+ ta file dekha uchit (triage_router.py, setu_pipeline.py etc.)
 
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
@@ -72,24 +73,37 @@ with torch.no_grad():
 ```
 
 ## Step 4: Run
-- Run button chap, 5-6 min wait koro (first time model download 3GB)
+- Run button chap, 5-6 min wait koro (first time model download ~3GB)
 - Output e dekhbe Bengali answer
+- Success hole `src/` folder er file list + GPU name + 2 ta Bengali answer dekhabe
 
 ## Step 5: Full SETU Pipeline (Next Cell)
+Clone already hoye geche Step 3 e, tai abar clone korte hobe na - sudhu requirements install + run:
+
 ```python
-# Clone repo
-!git clone https://github.com/einadid/A-Selective-Triage-and-Correct-Framework-for-Hallucination-Mitigation-in-Bng-SLM-CSE-98.git
-%cd A-Selective-Triage-and-Correct-Framework-for-Hallucination-Mitigation-in-Bng-SLM-CSE-98
-!pip install -r requirements.txt -q
+%cd /kaggle/working/A-Selective-Triage-and-Correct-Framework-for-Hallucination-Mitigation-in-Bng-SLM-CSE-98
+!pip install -q -r requirements.txt
 
 # Run real pipeline
 !python src/main.py --input "বাংলাদেশের রাজধানী কোথায় এবং এর জনসংখ্যা কত?"
 ```
 
+## Full Notebook
+Ready-made 6-cell notebook o ache repo te: `notebooks/SETU_Kaggle_Full.ipynb`
+Kaggle e: File -> Import Notebook -> ei file ta upload koro -> shob cell run koro.
+
+## Latest Code Update Pete
+Ami notun code push korle (main branch e), Kaggle e:
+```python
+%cd /kaggle/working/A-Selective-Triage-and-Correct-Framework-for-Hallucination-Mitigation-in-Bng-SLM-CSE-98
+!git pull origin main
+```
+
 ## Troubleshooting
-- CUDA out of memory -> model_name change to "Qwen/Qwen2.5-0.5B-Instruct" (choto model)
-- Internet off thakle model download hobe na -> Settings e Internet ON koro
-- Session expire -> Save kore rakho, abar run koro
+- **CUDA out of memory** -> model_name change to `Qwen/Qwen2.5-0.5B-Instruct` (choto model)
+- **Internet off** -> `Could not resolve host: github.com` error ashe; Settings e Internet ON koro
+- **Authentication failed / could not read Username** -> repo private hoye geche; GitHub Settings theke abar public koro
+- **Session expire** -> Save kore rakho, abar run koro
 
 ## Next
 - Result screenshot niye supervisor ke dekhao

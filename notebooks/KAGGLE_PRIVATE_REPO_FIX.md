@@ -1,5 +1,13 @@
 # Kaggle Error Fix - Private Repo + Internet OFF
 
+> **STATUS: SOLVED (reference only)**
+> Repo ekhon **public** + full code **main branch** e merge kora hoyeche.
+> Ekhon shudhu eta korlei hobe:
+> ```python
+> !git clone https://github.com/einadid/A-Selective-Triage-and-Correct-Framework-for-Hallucination-Mitigation-in-Bng-SLM-CSE-98.git
+> ```
+> Nicher file ta history/reference hisebe rakha holo - jodi kokhono repo abar private koro, tokhon kaj e lagbe.
+
 ## Tomar Error:
 ```
 Cloning into 'A-Selective-...'

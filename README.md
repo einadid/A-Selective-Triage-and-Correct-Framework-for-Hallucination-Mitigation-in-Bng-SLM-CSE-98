@@ -31,4 +31,15 @@ pip install -r requirements.txt
 python src/main.py --task qa --model qwen2.5-3b --input "বাংলাদেশের রাজধানী কোথায়?"
 ```
 
+## Run on Kaggle (Free T4 GPU)
+Repo is **public** - no token needed. In a Kaggle notebook (Settings -> Internet ON, Accelerator -> GPU T4 x2):
+```python
+!git clone https://github.com/einadid/A-Selective-Triage-and-Correct-Framework-for-Hallucination-Mitigation-in-Bng-SLM-CSE-98.git
+%cd A-Selective-Triage-and-Correct-Framework-for-Hallucination-Mitigation-in-Bng-SLM-CSE-98
+!pip install -q -r requirements.txt
+!ls src/
+```
+
+Ready-made notebook: `notebooks/SETU_Kaggle_Full.ipynb` - Guide: `notebooks/KAGGLE_SETUP_GUIDE.md`
+
 See `docs/` for full thesis documentation.
